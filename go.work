@@ -1,0 +1,8 @@
+go 1.19
+
+use (
+	./api_gateway
+	./services/modules/gateway_module
+	./services/modules/user_account_module
+	./services/user_account
+)
