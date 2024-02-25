@@ -1,39 +1,49 @@
 # API Document
 
-+ `router` means this request can be sent without loggined in status
-+ `user-router` means this request shoud be sent with loggined in status
++ Routers
+    + `router` means this request can be sent without loggined in status
+    + `user-router` means this request shoud be sent with loggined in status
++ Naming Principles
+    + `Camel-Case Naming` for golang structs
+    + All lower case letters with `_` for JSON keys
+    + All lower case letters with `-` for API Gateway handlers
++ Config
+    + All config files are palced in ./services/modules/configs/
+    + Env of docker-compose is ./.env
+
 
 ## User API
-+ Login
+
++ User Create
 ```golang
-router.post("/login", {username string, password string}) {
+router.post("/user-create", {username, password, email}) {
     ctx.JSON(
         http.StatusOK,
         gin.H{
-            "LoginStatus": "true",
-            "access_token": accessToken
+            "create_result": true,
+    })
+}
+```
+
++ Login
+```golang
+router.post("/user-login", {username string, password string}) {
+    ctx.JSON(
+        http.StatusOK,
+        gin.H{
+            "login_result": "true",
+            "access_token": AccessToken
     })
 }
 ```
 
 + Refresh
 ```golang
-user-router.post("/refresh", {NULL}) {
+user-router.post("/user-refresh", {NULL}) {
     c.JSON(
         http.StatusOK, 
         gin.H{
-            "access_token": accessToken
-    })
-}
-```
-
-+ Register
-```golang
-router.post("/register", {username, password, email}) {
-    ctx.JSON(
-        http.StatusOK,
-        gin.H{
-            "RegisterResult": "true",
+            "access_token": AccessToken
     })
 }
 ```
@@ -46,7 +56,7 @@ user-router.post("/forget-pwd", {username, email}) {
     ctx.JSON(
         http.StatusOK,
         gin.H{
-            "RegsetPassword": "true",
+            "user_valid": true,
     })
 }
 ```
@@ -57,7 +67,7 @@ user-router.post("/forget-pwd", {username, email}) {
 ## Stock API
 + Search 
 ```golang
-router.post("/stock_search", {stock_num}) {
+router.post("/stock-search", {stock_num}) {
     ctx.JSON(
         http.StatusOK,
         StockInfo
@@ -74,7 +84,7 @@ type StockInfo struct {
 
 + Trending
 ```golang
-router.post("/stock_trending", {NULL}) {
+router.post("/stock-trending", {NULL}) {
     ctx.JSON(
         http.StatusOK,
         StockList
@@ -103,7 +113,7 @@ user-router.post("/add-fav", {username string, stork_num int}) {
     ctx.JSON(
         http.StatusOK,
         gin.H{
-            "AddStock": "true",
+            "add_stock": "true",
         }
 )}
 
@@ -115,7 +125,7 @@ user-router.post("/del-fav", {username string, stork_num int}) {
     ctx.JSON(
         http.StatusOK,
         gin.H{
-            "DelStock": "true",
+            "del_stock": "true",
         }
 )}
 ```
