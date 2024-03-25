@@ -1,0 +1,22 @@
+version: "3"
+
+services:
+  skAI_PR:
+    image: tensorflow/serving
+    ports: 
+      - 127.0.0.1:18502:8501
+    volumes:
+      - ./PredictionModel:/models/PredictionModel
+    environment:
+      MODEL_NAME: PredictionModel
+    container_name: skAI_PR
+
+  skAI_AE:
+    image: tensorflow/serving
+    ports: 
+      - 127.0.0.1:18501:8501
+    volumes:
+      - ./AutoEncoderModel:/models/AutoEncoderModel
+    environment:
+      MODEL_NAME: AutoEncoderModel
+    container_name: skAI_AE

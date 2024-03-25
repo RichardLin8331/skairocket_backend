@@ -1,0 +1,8 @@
+FinMind
+Flask
+pandas
+numpy
+numpyencoder
+scikit-learn
+joblib
+pyaml

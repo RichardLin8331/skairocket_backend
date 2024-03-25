@@ -1,13 +1,14 @@
 package main
 
 import (
-	"useraccountmodule"
+	"context"
 
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	uam := useraccountmodule.NewUserAccountModule()
+	uam := NewUserAccountModule()
+	defer uam.user_mongo_client.Disconnect(context.Background())
 	uam.Init()
 	r := gin.Default()
 	r.POST("/UserLogin", uam.LoginHandler)
