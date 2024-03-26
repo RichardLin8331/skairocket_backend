@@ -33,7 +33,7 @@ app = Flask(__name__)
 def hello():
     return "Hello, World!"
 
-@app.route("/SearchStock", methods=['POST'])
+@app.route("/StockPredict", methods=['POST'])
 def searchstock():
     stocknum = request.get_json()['stocknum']
     search_month = int(request.get_json()['stockmonth'])
@@ -75,7 +75,7 @@ def searchstock():
     ae_result2 = resp2.json()['predictions']
     recon_loss = (1.0-((np.array(stock_tomodel[0]) -np.array(ae_result2[0]))**2).mean())*100
     print(recon_loss)
-    return Response(json.dumps({'price': reved[0][7], 'confidence': recon_loss}), mimetype='application/json')
+    return Response(json.dumps({'predictedprice': reved[0][7], 'predictionconfidence': recon_loss}), mimetype='application/json')
 
 
 if __name__ == '__main__':

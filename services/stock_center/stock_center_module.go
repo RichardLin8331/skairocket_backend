@@ -1,8 +1,14 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -24,11 +30,22 @@ type StockCenterModule struct {
 }
 
 type StockInfo struct {
-	UpdateDate        string  `json:"updatesate"`
-	LastDayOpen       float64 `json:"lastdayopen"`
-	LastDayClose      float64 `json:"lastdayclose"`
+	Stocknum   int    `json:"stocknum" gorm:"primaryKey;not null"`
+	UpdateDate string `json:"updatesate"`
+	//LastDayOpen       float64 `json:"lastdayopen"`
+	//LastDayClose      float64 `json:"lastdayclose"`
 	PredictedPrice    float64 `json:"predictedprice"`
-	PredictConfidence float64 `json:"predicctionconfidence"`
+	PredictConfidence float64 `json:"predictionconfidence"`
+}
+
+type post_content struct {
+	Stocknum   int    `json:"stocknum"`
+	Stockmonth string `json:"stockmonth"`
+}
+
+type resp_content struct {
+	Resultprice      float64 `json:"predictedprice"`
+	Resultconfidence float64 `json:"predictionconfidence"`
 }
 
 func (sc *StockCenterModule) Init() {
@@ -55,6 +72,61 @@ func (sc *StockCenterModule) Init() {
 	fmt.Println("MySQL Connected")
 }
 
-func (sc *StockCenterModule) SearchStockHandler() {
+func (sc *StockCenterModule) SearchStockHandler(c *gin.Context) {
 
+	pc := post_content{}
+	if err := c.ShouldBind(&pc); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
+		return
+	}
+
+	si, stock_status := sc.checkStockStatus(pc.Stocknum)
+
+	if stock_status == 1 {
+		c.JSON(http.StatusOK, si)
+		return
+	}
+
+	pc_json, _ := json.Marshal(pc)
+
+	resp, err2 := http.Post("http://localhost"+":19982"+"/StockPredict", "application/json", bytes.NewBuffer(pc_json))
+
+	if err2 != nil {
+		panic(err2.Error())
+	}
+
+	body, _ := io.ReadAll(resp.Body)
+
+	pred_result := resp_content{}
+	err3 := json.Unmarshal(body, &pred_result)
+	if err3 != nil {
+		print("error\n")
+	}
+	si.PredictedPrice = pred_result.Resultprice
+	si.PredictConfidence = pred_result.Resultconfidence
+
+	sc.stock_info_DB.Save(si)
+	c.JSON(http.StatusOK, pred_result)
+	print("Successfully Update ")
+}
+
+func (sc *StockCenterModule) checkStockStatus(stocknum int) (*StockInfo, int) {
+	si := &StockInfo{}
+	var stock_status int
+	now := time.Now()
+	today_date := now.Format("2006-01-02")
+
+	err := sc.stock_info_DB.First(&si, "stocknum = ?", stocknum).Error
+	if err != nil {
+		stock_status = 2
+		si.Stocknum = stocknum
+	} else if si.UpdateDate != today_date {
+		stock_status = 3
+	} else {
+		stock_status = 1
+		print(si.PredictedPrice, "\n")
+
+	}
+	si.UpdateDate = today_date
+	return si, stock_status
 }

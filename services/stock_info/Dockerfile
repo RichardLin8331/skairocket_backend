@@ -13,4 +13,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY ./stock_info.py ./
 
-#CMD [ "python", "stock_info.py" ]
+CMD [ "python", "stock_info.py" ]
