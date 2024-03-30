@@ -13,6 +13,7 @@ func main() {
 	r := gin.Default()
 	r.POST("/UserLogin", uam.LoginHandler)
 	r.POST("/UserCreate", uam.UserCreateHandler)
+	r.POST("/AddFavorite", uam.AddFavoriteHandler)
 
 	r.Run(":8900")
 

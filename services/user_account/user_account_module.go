@@ -40,10 +40,11 @@ type UserAccountModule struct {
 }
 
 type User struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-	Email    string `json:"email"`
-	UserID   int    `json:"userid" gorm:"autoIncrement;primaryKey;not null"`
+	UserID         int    `json:"userid" gorm:"autoIncrement;primaryKey;not null"`
+	Username       string `json:"username"`
+	Password       string `json:"password"`
+	Email          string `json:"email"`
+	ProfilePicture string `json:"profile_picture"`
 }
 
 type CustomClaims struct {
@@ -52,8 +53,8 @@ type CustomClaims struct {
 }
 
 type StockFavorite struct {
-	UserID        int   `bson:"userid"`
-	FavoriteStock []int `bson:"favorite_stock"`
+	UserID        int      `bson:"userid"`
+	FavoriteStock []string `bson:"favorite_stock"`
 }
 
 func NewUserAccountModule() *UserAccountModule {
@@ -130,9 +131,16 @@ func (ua *UserAccountModule) LoginHandler(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
 	}
+	print(login_content.UserID, "\n")
+	user_favorate, err2 := ua.getUserFavoriteStocks(userinfo.UserID)
+	if err2 != nil {
+		panic(err2.Error())
+	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"success": true,
+		"success":         true,
+		"profile_picture": userinfo.ProfilePicture,
+		"favorite_list":   user_favorate,
 	})
 }
 
@@ -161,7 +169,7 @@ func (ua *UserAccountModule) UserCreateHandler(c *gin.Context) {
 	ua.user_account_DB.Create(usercreate_content)
 
 	userID := usercreate_content.UserID
-	stocksToAdd := []int{}
+	stocksToAdd := []string{}
 	err2 := ua.addStocksToFavorite(userID, stocksToAdd)
 	if err2 != nil {
 		log.Fatal(err2.Error())
@@ -179,23 +187,23 @@ func (ua *UserAccountModule) findUser(username string) (*User, error) {
 }
 
 func (ua *UserAccountModule) AddFavoriteHandler(c *gin.Context) {
-	login_content := &User{}
-	stock_to_add := struct {
-		Stocknum []int `json:"stocknum"`
+	post_content := struct {
+		Username string   `json:"username"`
+		Stocknum []string `json:"stocknum"`
 	}{}
 
-	if err := c.ShouldBind(&login_content); err != nil {
+	if err := c.ShouldBind(&post_content); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
-	userinfo, err := ua.findUser(login_content.Username)
+	userinfo, err := ua.findUser(post_content.Username)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Incorrect Username or Password"})
 		return
 	}
 
-	err2 := ua.addStocksToFavorite(userinfo.UserID, stock_to_add.Stocknum)
+	err2 := ua.addStocksToFavorite(userinfo.UserID, post_content.Stocknum)
 	if err2 == nil {
 		c.JSON(http.StatusOK, gin.H{"add_result": true})
 	}
@@ -205,7 +213,7 @@ func (ua *UserAccountModule) AddFavoriteHandler(c *gin.Context) {
 func (ua *UserAccountModule) DelFavoriteHandler(c *gin.Context) {
 	login_content := &User{}
 	stock_to_del := struct {
-		Stocknum []int `json:"stocknum"`
+		Stocknum []string `json:"stocknum"`
 	}{}
 
 	if err := c.ShouldBind(&login_content); err != nil {
@@ -246,7 +254,7 @@ func (ua *UserAccountModule) GetFavoriteHandler(c *gin.Context) {
 	}
 }
 
-func (ua *UserAccountModule) addStocksToFavorite(userID int, stocks []int) error {
+func (ua *UserAccountModule) addStocksToFavorite(userID int, stocks []string) error {
 	ctx := context.Background()
 
 	var result StockFavorite
@@ -272,7 +280,7 @@ func (ua *UserAccountModule) addStocksToFavorite(userID int, stocks []int) error
 	return nil
 }
 
-func (ua *UserAccountModule) deleteStocksFromFavorite(userID int, stocks []int) error {
+func (ua *UserAccountModule) deleteStocksFromFavorite(userID int, stocks []string) error {
 	ctx := context.Background()
 
 	// Update operation to remove stocks from favorite list
@@ -286,7 +294,7 @@ func (ua *UserAccountModule) deleteStocksFromFavorite(userID int, stocks []int) 
 	return nil
 }
 
-func (ua *UserAccountModule) getUserFavoriteStocks(userID int) ([]int, error) {
+func (ua *UserAccountModule) getUserFavoriteStocks(userID int) ([]string, error) {
 	ctx := context.Background()
 
 	// Query user's favorite stocks

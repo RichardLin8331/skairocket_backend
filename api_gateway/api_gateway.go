@@ -22,6 +22,7 @@ func main() {
 	r.POST("/user-login", g.UserLogin)
 	r.POST("/user-create", g.UserCreate)
 	r.POST("/user-refresh", g.RefreshHandler)
+	r.POST("/add-favorite", g.AddFavorite)
 	user_beh := r.Group("/user/")
 	user_beh.Use(g.AuthMiddleware())
 	r.GET("/protected", g.AuthMiddleware(), func(c *gin.Context) {

@@ -25,10 +25,11 @@ func NewGatewayModule() *GatewayModule {
 }
 
 type User struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-	Email    string `json:"email"`
-	UserID   int    `json:"userid" gorm:"autoIncrement;primaryKey;not null"`
+	UserID         int    `json:"userid" gorm:"autoIncrement;primaryKey;not null"`
+	Username       string `json:"username"`
+	Password       string `json:"password"`
+	Email          string `json:"email"`
+	ProfilePicture string `json:"profile_picture"`
 }
 
 type CustomClaims struct {
@@ -104,7 +105,9 @@ func (g *GatewayModule) UserLogin(c *gin.Context) {
 
 	body, _ := io.ReadAll(resp.Body)
 	login_result := struct {
-		Success bool `json:"success"`
+		Success        bool     `json:"success"`
+		ProfilePicture string   `json:"profile_picture"`
+		FavoriteList   []string `json:"favorite_list"`
 	}{}
 	err2 := json.Unmarshal(body, &login_result)
 	if err2 != nil {
@@ -116,9 +119,28 @@ func (g *GatewayModule) UserLogin(c *gin.Context) {
 	c.SetCookie("skai-rt", userRefreshToken, int(time.Hour*24*7), "/", g.Network, false, true)
 
 	c.JSON(http.StatusOK, gin.H{
-		"login_result": true,
-		"access_token": userAccessToken,
+		"login_result":    true,
+		"access_token":    userAccessToken,
+		"profile_picture": login_result.ProfilePicture,
+		"favorite_list":   login_result.FavoriteList,
 	})
+}
+
+func (g *GatewayModule) AddFavorite(c *gin.Context) {
+	postcontent := struct {
+		Username string   `json:"username"`
+		Stocknum []string `json:"stocknum"`
+	}{}
+
+	if err := c.ShouldBind(&postcontent); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
+		return
+	}
+	post_JSON, _ := json.Marshal(postcontent)
+	_, err1 := http.Post(g.Network+":8900"+"/AddFavorite", "application/json", bytes.NewBuffer(post_JSON))
+	if err1 == nil {
+		c.JSON(http.StatusOK, gin.H{"add_result": true})
+	}
 }
 
 func (g *GatewayModule) createAccessToken(username string) (string, error) {
