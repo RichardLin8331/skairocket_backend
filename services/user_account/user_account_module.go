@@ -17,7 +17,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type mysql_info_struct struct {
+type db_info_struct struct {
 	MySQL_Username string
 	MySQL_Password string
 	MySQL_Network  string
@@ -25,12 +25,14 @@ type mysql_info_struct struct {
 	MySQL_Port     int
 	MySQL_Datbase  string
 
+	Mongo_IP       string
+	Mongo_port     string
 	Mongo_Username string
 	Mongo_Password string
 }
 
 type UserAccountModule struct {
-	DB_Info                  mysql_info_struct
+	DB_Info                  db_info_struct
 	Jwt_secret               string
 	jwt_secret_byte          []byte
 	user_account_DB          *gorm.DB
@@ -58,7 +60,7 @@ type StockFavorite struct {
 }
 
 func NewUserAccountModule() *UserAccountModule {
-	return &UserAccountModule{iscontainer: false}
+	return &UserAccountModule{iscontainer: true}
 }
 
 func (ua *UserAccountModule) Init() {
@@ -89,7 +91,7 @@ func (ua *UserAccountModule) Init() {
 		Username: ua.DB_Info.Mongo_Username,
 		Password: ua.DB_Info.Mongo_Password,
 	}
-	clientOptions := options.Client().ApplyURI("mongodb://localhost:18336").SetAuth(mongo_credential)
+	clientOptions := options.Client().ApplyURI("mongodb://" + ua.DB_Info.Mongo_IP + ua.DB_Info.Mongo_port).SetAuth(mongo_credential)
 	ua.user_mongo_client, err = mongo.Connect(context.Background(), clientOptions)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -131,7 +133,7 @@ func (ua *UserAccountModule) LoginHandler(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
 	}
-	print(login_content.UserID, "\n")
+
 	user_favorate, err2 := ua.getUserFavoriteStocks(userinfo.UserID)
 	if err2 != nil {
 		panic(err2.Error())
@@ -211,25 +213,25 @@ func (ua *UserAccountModule) AddFavoriteHandler(c *gin.Context) {
 }
 
 func (ua *UserAccountModule) DelFavoriteHandler(c *gin.Context) {
-	login_content := &User{}
-	stock_to_del := struct {
+	post_content := struct {
+		Username string   `json:"username"`
 		Stocknum []string `json:"stocknum"`
 	}{}
 
-	if err := c.ShouldBind(&login_content); err != nil {
+	if err := c.ShouldBind(&post_content); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
-	userinfo, err := ua.findUser(login_content.Username)
+	userinfo, err := ua.findUser(post_content.Username)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Incorrect Username or Password"})
 		return
 	}
 
-	err2 := ua.deleteStocksFromFavorite(userinfo.UserID, stock_to_del.Stocknum)
+	err2 := ua.deleteStocksFromFavorite(userinfo.UserID, post_content.Stocknum)
 	if err2 == nil {
-		c.JSON(http.StatusOK, gin.H{"add_result": true})
+		c.JSON(http.StatusOK, gin.H{"delete_result": true})
 	}
 
 }

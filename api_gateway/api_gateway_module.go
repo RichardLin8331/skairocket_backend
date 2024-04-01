@@ -15,9 +15,11 @@ import (
 )
 
 type GatewayModule struct {
-	JwtSecret       string
-	Network         string
-	jwt_secret_byte []byte
+	JwtSecret         string
+	Network           string
+	SkAI_user_account string
+	SkAI_stock_center string
+	jwt_secret_byte   []byte
 }
 
 func NewGatewayModule() *GatewayModule {
@@ -45,6 +47,7 @@ func (g *GatewayModule) Init() {
 	vp.SetConfigType("yaml")
 	vp.ReadInConfig()
 	vp.Unmarshal(&g)
+	print(g.JwtSecret, g.SkAI_stock_center, "  ININ\n")
 	g.jwt_secret_byte = []byte(g.JwtSecret)
 }
 
@@ -56,7 +59,7 @@ func (g *GatewayModule) UserCreate(c *gin.Context) {
 	}
 
 	user_JSON, _ := json.Marshal(user_info)
-	resp, _ := http.Post(g.Network+":8900"+"/UserCreate", "application/json", bytes.NewBuffer(user_JSON))
+	resp, _ := http.Post("http://"+g.SkAI_user_account+":8900"+"/UserCreate", "application/json", bytes.NewBuffer(user_JSON))
 	body, _ := io.ReadAll(resp.Body)
 
 	if resp.StatusCode == 200 {
@@ -97,7 +100,7 @@ func (g *GatewayModule) UserLogin(c *gin.Context) {
 
 	login_JSON, _ := json.Marshal(login_content)
 
-	resp, err1 := http.Post(g.Network+":8900"+"/UserLogin", "application/json", bytes.NewBuffer(login_JSON))
+	resp, err1 := http.Post("http://"+g.SkAI_user_account+":8900"+"/UserLogin", "application/json", bytes.NewBuffer(login_JSON))
 	if err1 != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
 		return
@@ -114,13 +117,17 @@ func (g *GatewayModule) UserLogin(c *gin.Context) {
 		print("error\n")
 	}
 	userAccessToken, _ := g.createAccessToken(login_content.Username)
-	userRefreshToken, _ := g.createRefreshToken(login_content.Username)
+	userRefreshToken, err3 := g.createRefreshToken(login_content.Username)
+	if err3 != nil {
+		print(err3.Error())
+	}
+	print(userRefreshToken, " token\n")
 
-	c.SetCookie("skai-rt", userRefreshToken, int(time.Hour*24*7), "/", g.Network, false, true)
+	c.SetCookie("refreshtoken", userRefreshToken, int(time.Hour*24*7), "/", "127.0.0.1", false, true)
 
 	c.JSON(http.StatusOK, gin.H{
 		"login_result":    true,
-		"access_token":    userAccessToken,
+		"accesstoken":     userAccessToken,
 		"profile_picture": login_result.ProfilePicture,
 		"favorite_list":   login_result.FavoriteList,
 	})
@@ -137,10 +144,54 @@ func (g *GatewayModule) AddFavorite(c *gin.Context) {
 		return
 	}
 	post_JSON, _ := json.Marshal(postcontent)
-	_, err1 := http.Post(g.Network+":8900"+"/AddFavorite", "application/json", bytes.NewBuffer(post_JSON))
+	_, err1 := http.Post("http://"+g.SkAI_user_account+":8900"+"/AddFavorite", "application/json", bytes.NewBuffer(post_JSON))
 	if err1 == nil {
 		c.JSON(http.StatusOK, gin.H{"add_result": true})
 	}
+}
+
+func (g *GatewayModule) DeleteFavorite(c *gin.Context) {
+	postcontent := struct {
+		Username string   `json:"username"`
+		Stocknum []string `json:"stocknum"`
+	}{}
+
+	if err := c.ShouldBind(&postcontent); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
+		return
+	}
+	post_JSON, _ := json.Marshal(postcontent)
+	_, err1 := http.Post("http://"+g.SkAI_user_account+":8900"+"/DeleteFavorite", "application/json", bytes.NewBuffer(post_JSON))
+	if err1 == nil {
+		c.JSON(http.StatusOK, gin.H{"delete_result": true})
+	}
+}
+
+func (g *GatewayModule) SearchStock(c *gin.Context) {
+	postcontent := struct {
+		Stocknum string `json:"stocknum"`
+	}{}
+
+	if err := c.ShouldBind(&postcontent); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
+		return
+	}
+	post_JSON, _ := json.Marshal(postcontent)
+	resp, err := http.Post("http://"+g.SkAI_stock_center+":8901"+"/SearchStock", "application/json", bytes.NewBuffer(post_JSON))
+	if err != nil {
+		print(err.Error())
+	}
+	body, _ := io.ReadAll(resp.Body)
+	pred_resp := struct {
+		Resultprice      float64 `json:"predictedprice"`
+		Resultconfidence float64 `json:"predictionconfidence"`
+	}{}
+	err2 := json.Unmarshal(body, &pred_resp)
+	if err2 != nil {
+		print("error\n")
+	}
+	c.JSON(http.StatusOK, pred_resp)
+
 }
 
 func (g *GatewayModule) createAccessToken(username string) (string, error) {
@@ -171,7 +222,7 @@ func (g *GatewayModule) createRefreshToken(username string) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	rftoken, err := token.SignedString(g.JwtSecret)
+	rftoken, err := token.SignedString(g.jwt_secret_byte)
 	if err != nil {
 		return "", err
 	}
@@ -183,7 +234,7 @@ func (g *GatewayModule) VerifyToken(tokenString string) (*CustomClaims, error) {
 	claims := &CustomClaims{}
 
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		return g.JwtSecret, nil
+		return g.jwt_secret_byte, nil
 	})
 
 	if err != nil || !token.Valid {
@@ -195,7 +246,7 @@ func (g *GatewayModule) VerifyToken(tokenString string) (*CustomClaims, error) {
 
 func (g *GatewayModule) RefreshHandler(c *gin.Context) {
 	// Retrieve the refresh token from the HttpOnly cookie
-	refreshToken, err := c.Cookie("ry")
+	refreshToken, err := c.Cookie("refreshtoken")
 	if err != nil {
 		print("No Token\n")
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid refresh token"})
@@ -205,6 +256,7 @@ func (g *GatewayModule) RefreshHandler(c *gin.Context) {
 	// Verify the refresh token
 	claims, err := g.VerifyToken(refreshToken)
 	if err != nil {
+		print("bad token\n")
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid refresh token"})
 		return
 	}
@@ -216,7 +268,7 @@ func (g *GatewayModule) RefreshHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"access_token": accessToken})
+	c.JSON(http.StatusOK, gin.H{"accesstoken": accessToken})
 }
 
 func (g *GatewayModule) AuthMiddleware() gin.HandlerFunc {

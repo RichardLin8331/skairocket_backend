@@ -12,5 +12,6 @@ COPY ./requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY ./stock_info.py ./
+EXPOSE 8902
 
 CMD [ "python", "stock_info.py" ]

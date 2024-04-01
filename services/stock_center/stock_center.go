@@ -9,7 +9,7 @@ import "github.com/gin-gonic/gin"
 	}
 */
 func main() {
-	scm := &StockCenterModule{}
+	scm := &StockCenterModule{iscontainer: true}
 	scm.Init()
 
 	r := gin.Default()

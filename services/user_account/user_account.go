@@ -14,6 +14,7 @@ func main() {
 	r.POST("/UserLogin", uam.LoginHandler)
 	r.POST("/UserCreate", uam.UserCreateHandler)
 	r.POST("/AddFavorite", uam.AddFavoriteHandler)
+	r.POST("/DeleteFavorite", uam.DelFavoriteHandler)
 
 	r.Run(":8900")
 

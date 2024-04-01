@@ -1,25 +1,25 @@
 version: "3"
 
 services:
-  skAI_SQL:
+  skai_sql:
     image: mysql:latest
     ports: 
       - 127.0.0.1:18335:3306
     
     environment:
       MYSQL_ROOT_PASSWORD: deVeloPersecuRity
-      MYSQL_DB: skAI_SQL
+      MYSQL_DB: skai_sql
       MYSQL_TCP_PORT: 3306
     command: --init-file /data/application/init.sql
     volumes:
         - ./init.sql:/data/application/init.sql
-    container_name: skAI_SQL
+    container_name: skai_sql
 
-  skAI_Mongo:
+  skai_mongo:
     image: mongo:latest
     ports:
       - 127.0.0.1:18336:27017
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: disTrIbutedsEcurIty
-    container_name: skAI_MONGO
+    container_name: skai_mongo

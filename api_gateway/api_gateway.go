@@ -1,8 +1,6 @@
 package main
 
 import (
-	"net/http"
-
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -22,17 +20,12 @@ func main() {
 	r.POST("/user-login", g.UserLogin)
 	r.POST("/user-create", g.UserCreate)
 	r.POST("/user-refresh", g.RefreshHandler)
-	r.POST("/add-favorite", g.AddFavorite)
-	user_beh := r.Group("/user/")
-	user_beh.Use(g.AuthMiddleware())
-	r.GET("/protected", g.AuthMiddleware(), func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"message": "Protected Route Accessed"})
-	})
-
-	user_router := r.Group("/user_router")
-	user_router.POST("/user-protected", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"message": "Protected Route Accessed"})
-	})
+	r.POST("/search-stock", g.SearchStock)
+	r.POST("/refresh", g.RefreshHandler)
+	user_auth_router := r.Group("/user")
+	user_auth_router.Use(g.AuthMiddleware())
+	user_auth_router.POST("/add-favorite", g.AddFavorite)
+	user_auth_router.POST("/delete-favorite", g.DeleteFavorite)
 
 	r.Run(":8899")
 }

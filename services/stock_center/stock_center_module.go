@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -24,13 +26,15 @@ type mysql_info_struct struct {
 }
 
 type StockCenterModule struct {
-	MySQL_Info    mysql_info_struct
-	stock_info_DB *gorm.DB
-	iscontainer   bool
+	MySQL_Info      mysql_info_struct
+	Stock_Info_IP   string
+	Stock_Info_port string
+	stock_info_DB   *gorm.DB
+	iscontainer     bool
 }
 
 type StockInfo struct {
-	Stocknum   int    `json:"stocknum" gorm:"primaryKey;not null"`
+	Stocknum   string `json:"stocknum" gorm:"primaryKey;not null"`
 	UpdateDate string `json:"updatesate"`
 	//LastDayOpen       float64 `json:"lastdayopen"`
 	//LastDayClose      float64 `json:"lastdayclose"`
@@ -39,8 +43,8 @@ type StockInfo struct {
 }
 
 type post_content struct {
-	Stocknum   int    `json:"stocknum"`
-	Stockmonth string `json:"stockmonth"`
+	Stocknum   string `json:"stocknum"`
+	Stockmonth int    `json:"stockmonth"`
 }
 
 type resp_content struct {
@@ -73,14 +77,16 @@ func (sc *StockCenterModule) Init() {
 }
 
 func (sc *StockCenterModule) SearchStockHandler(c *gin.Context) {
-
-	pc := post_content{}
+	now := time.Now()
+	today_date := now.Format("2006-01-02")
+	today_month, _ := strconv.Atoi(strings.Split(today_date, "-")[1])
+	pc := post_content{Stockmonth: today_month}
 	if err := c.ShouldBind(&pc); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
-	si, stock_status := sc.checkStockStatus(pc.Stocknum)
+	si, stock_status := sc.checkStockStatus(pc.Stocknum, today_date)
 
 	if stock_status == 1 {
 		c.JSON(http.StatusOK, si)
@@ -89,7 +95,7 @@ func (sc *StockCenterModule) SearchStockHandler(c *gin.Context) {
 
 	pc_json, _ := json.Marshal(pc)
 
-	resp, err2 := http.Post("http://localhost"+":19982"+"/StockPredict", "application/json", bytes.NewBuffer(pc_json))
+	resp, err2 := http.Post("http://"+sc.Stock_Info_IP+sc.Stock_Info_port+"/StockPredict", "application/json", bytes.NewBuffer(pc_json))
 
 	if err2 != nil {
 		panic(err2.Error())
@@ -110,11 +116,9 @@ func (sc *StockCenterModule) SearchStockHandler(c *gin.Context) {
 	print("Successfully Update ")
 }
 
-func (sc *StockCenterModule) checkStockStatus(stocknum int) (*StockInfo, int) {
+func (sc *StockCenterModule) checkStockStatus(stocknum string, today_date string) (*StockInfo, int) {
 	si := &StockInfo{}
 	var stock_status int
-	now := time.Now()
-	today_date := now.Format("2006-01-02")
 
 	err := sc.stock_info_DB.First(&si, "stocknum = ?", stocknum).Error
 	if err != nil {

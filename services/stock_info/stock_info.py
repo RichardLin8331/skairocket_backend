@@ -36,7 +36,7 @@ def hello():
 @app.route("/StockPredict", methods=['POST'])
 def searchstock():
     stocknum = request.get_json()['stocknum']
-    search_month = int(request.get_json()['stockmonth'])
+    search_month = request.get_json()['stockmonth']
     print(stocknum, search_month)
     stockstart = '2024-' + month_start_end[search_month][0]
     stockstop = '2024-' + month_start_end[search_month][1]
@@ -45,13 +45,19 @@ def searchstock():
     start_date= stockstart,
     end_date=stockstop )
     if df1.shape[0] < 10:
-        stockstart = month_start_end[search_month-1][0]
-        stockstop = month_start_end[search_month-1][1]
+        
+        stockstart = '2024-' + month_start_end[search_month-1][0]
+        stockstop = '2024-' + month_start_end[search_month-1][1]
         df2 = data_api.taiwan_stock_daily(
         stock_id=stocknum,
         start_date= stockstart,
         end_date=stockstop )
-        df1 = df2.append(df1, ignore_index = True)
+        if df1.empty:
+            df1 = df2
+        
+        else:
+            df1 = pd.concat([df2, df1],ignore_index=True)
+        print(df1)
     stock_dict = []
     for i in range(len(df1['open'])-10, len(df1['open'])):
         stockres_list = []
@@ -79,4 +85,4 @@ def searchstock():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=19982)
+    app.run(host='0.0.0.0', port=8902)

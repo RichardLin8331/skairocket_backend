@@ -1,0 +1,46 @@
+version: "3"
+
+services:
+  skai_sql:
+    image: mysql:latest
+    ports: 
+      - 127.0.0.1:18335:3306
+    
+    environment:
+      MYSQL_ROOT_PASSWORD: deVeloPersecuRity
+      MYSQL_DB: skai_sql
+      MYSQL_TCP_PORT: 3306
+    command: --init-file /data/application/init.sql
+    volumes:
+        - ./services/databases/init.sql:/data/application/init.sql
+    container_name: skai_sql
+
+  skAI_Mongo:
+    image: mongo:latest
+    ports:
+      - 127.0.0.1:18336:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: disTrIbutedsEcurIty
+    container_name: skai_mongo
+
+  skai_pr:
+    image: tensorflow/serving
+    ports: 
+      - 127.0.0.1:18502:8501
+    volumes:
+      - ./services/models/PredictionModel:/models/PredictionModel
+    environment:
+      MODEL_NAME: PredictionModel
+    container_name: skai_pr
+
+  skai_ae:
+    image: tensorflow/serving
+    ports: 
+      - 127.0.0.1:18501:8501
+    volumes:
+      - ./services/models/AutoEncoderModel:/models/AutoEncoderModel
+    environment:
+      MODEL_NAME: AutoEncoderModel
+    container_name: skai_ae
+

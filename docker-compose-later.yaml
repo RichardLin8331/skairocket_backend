@@ -1,0 +1,42 @@
+services:
+  skai_user_account:
+    image: skai_user_account
+    networks:
+      - skairocket_backend_default
+    ports:
+      - 8900:8900
+
+    container_name: skai_user_account
+
+  skai_stock_center:
+    image: skai_stock_center
+    networks:
+      - skairocket_backend_default
+    ports:
+      - 8901:8901
+    container_name: skai_stock_center
+
+  skai_stock_info:
+    image: skai_stock_info
+    networks:
+      - skairocket_backend_default
+
+    container_name: skai_stock_info
+
+  skai_api_gateway:
+    image: skai_api_gateway
+    ports:
+      - 127.0.0.1:8899:8899
+    networks:
+      - skairocket_backend_default
+    links:
+      - skai_user_account:skai_user_account
+      - skai_stock_center:skai_stock_center
+    
+    container_name: skai_api_gateway
+
+    
+networks:
+  skairocket_backend_default:
+    name: skairocket_backend_default
+    external: true
