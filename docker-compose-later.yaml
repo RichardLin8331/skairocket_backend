@@ -35,6 +35,16 @@ services:
     
     container_name: skai_api_gateway
 
+  skai_frontend:
+    image: skai_frontend
+    ports:
+      - 127.0.0.1:8080:8080
+    networks:
+      - skairocket_backend_default
+    
+    
+    container_name: skai_frontend
+
     
 networks:
   skairocket_backend_default:

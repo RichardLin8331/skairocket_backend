@@ -37,7 +37,7 @@ def hello():
 def searchstock():
     stocknum = request.get_json()['stocknum']
     search_month = request.get_json()['stockmonth']
-    print(stocknum, search_month)
+    #print(stocknum, search_month)
     stockstart = '2024-' + month_start_end[search_month][0]
     stockstop = '2024-' + month_start_end[search_month][1]
     df1 = data_api.taiwan_stock_daily(
@@ -57,7 +57,7 @@ def searchstock():
         
         else:
             df1 = pd.concat([df2, df1],ignore_index=True)
-        print(df1)
+        #print(df1)
     stock_dict = []
     for i in range(len(df1['open'])-10, len(df1['open'])):
         stockres_list = []
@@ -75,12 +75,14 @@ def searchstock():
     pr_result1 = resp1.json()['predictions'][0][0]
     to_rev = [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, pr_result1]]
     reved = stock_scaler.inverse_transform(to_rev)
-    print(pr_result1, reved[0][7])
+    #print(pr_result1, reved[0][7])
 
     resp2 = requests.post(url = 'http://' + stockinfo_config['AE_IP'] + ':8501/v1/models/AutoEncoderModel:predict', data = json.dumps(data, cls = NumpyEncoder))
     ae_result2 = resp2.json()['predictions']
     recon_loss = (1.0-((np.array(stock_tomodel[0]) -np.array(ae_result2[0]))**2).mean())*100
-    print(recon_loss)
+    #print(recon_loss)
+    if recon_loss < 0:
+        recon_loss = 0
     return Response(json.dumps({'predictedprice': reved[0][7], 'predictionconfidence': recon_loss}), mimetype='application/json')
 
 

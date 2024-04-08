@@ -76,7 +76,7 @@ func (ua *UserAccountModule) Init() {
 		ua.DB_Info.MySQL_IP = "127.0.0.1"
 	}
 	dsn := fmt.Sprintf("%s:%s@%s(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local", ua.DB_Info.MySQL_Username, ua.DB_Info.MySQL_Password, ua.DB_Info.MySQL_Network, ua.DB_Info.MySQL_IP, ua.DB_Info.MySQL_Port, ua.DB_Info.MySQL_Datbase)
-	print(dsn, " jwt ", ua.Jwt_secret)
+	print(dsn, " jwt ", ua.Jwt_secret, "\n")
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic("Error occurs while gorm working, " + err.Error())
@@ -262,7 +262,7 @@ func (ua *UserAccountModule) addStocksToFavorite(userID int, stocks []string) er
 	var result StockFavorite
 	err := ua.user_favorite_collection.FindOne(ctx, bson.M{"userid": userID}).Decode(&result)
 	if err == nil {
-		print("Not New User\n")
+		//print("Not New User\n")
 		// Update operation to add stocks to favorite list
 		update := bson.M{"$addToSet": bson.M{"favorite_stock": bson.M{"$each": stocks}}}
 		_, err := ua.user_favorite_collection.UpdateOne(ctx, bson.M{"userid": userID}, update)
@@ -270,7 +270,7 @@ func (ua *UserAccountModule) addStocksToFavorite(userID int, stocks []string) er
 			return err
 		}
 	} else {
-		print("New User\n")
+		//print("New User\n")
 		inserttodb := bson.M{"userid": userID, "favorite_stock": stocks}
 		_, err := ua.user_favorite_collection.InsertOne(ctx, inserttodb)
 		if err != nil {

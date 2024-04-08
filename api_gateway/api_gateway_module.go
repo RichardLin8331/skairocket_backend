@@ -47,7 +47,6 @@ func (g *GatewayModule) Init() {
 	vp.SetConfigType("yaml")
 	vp.ReadInConfig()
 	vp.Unmarshal(&g)
-	print(g.JwtSecret, g.SkAI_stock_center, "  ININ\n")
 	g.jwt_secret_byte = []byte(g.JwtSecret)
 }
 
@@ -121,7 +120,6 @@ func (g *GatewayModule) UserLogin(c *gin.Context) {
 	if err3 != nil {
 		print(err3.Error())
 	}
-	print(userRefreshToken, " token\n")
 
 	c.SetCookie("refreshtoken", userRefreshToken, int(time.Hour*24*7), "/", "127.0.0.1", false, true)
 
@@ -275,7 +273,6 @@ func (g *GatewayModule) AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Retrieve the access token from the Authorization header
 		accessToken := strings.Split(c.GetHeader("Authorization"), " ")[1]
-		print(accessToken)
 
 		if accessToken == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Access token missing"})
@@ -290,7 +287,6 @@ func (g *GatewayModule) AuthMiddleware() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		print("\nPass Verify\n")
 
 		// Attach the user ID to the context for use in the protected route
 		c.Set("username", claims.Username)

@@ -113,7 +113,6 @@ func (sc *StockCenterModule) SearchStockHandler(c *gin.Context) {
 
 	sc.stock_info_DB.Save(si)
 	c.JSON(http.StatusOK, pred_result)
-	print("Successfully Update ")
 }
 
 func (sc *StockCenterModule) checkStockStatus(stocknum string, today_date string) (*StockInfo, int) {
@@ -128,7 +127,6 @@ func (sc *StockCenterModule) checkStockStatus(stocknum string, today_date string
 		stock_status = 3
 	} else {
 		stock_status = 1
-		print(si.PredictedPrice, "\n")
 
 	}
 	si.UpdateDate = today_date
