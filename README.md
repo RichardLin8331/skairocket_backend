@@ -26,3 +26,7 @@
 + Bootstrap-vue
 ### Deployment
 + Microservice Architecture using Docker
+
+### Ongoing Sections
++ HTTP Response exception handling
++ Standardize variable names

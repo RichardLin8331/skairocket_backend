@@ -181,8 +181,8 @@ func (g *GatewayModule) SearchStock(c *gin.Context) {
 	}
 	body, _ := io.ReadAll(resp.Body)
 	pred_resp := struct {
-		Resultprice      float64 `json:"predictedprice"`
-		Resultconfidence float64 `json:"predictionconfidence"`
+		Resultprice      string `json:"predicted_price"`
+		Resultconfidence string `json:"prediction_confidence"`
 	}{}
 	err2 := json.Unmarshal(body, &pred_resp)
 	if err2 != nil {

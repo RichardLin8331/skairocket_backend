@@ -1,0 +1,13 @@
+DB_Info:
+  MySQL_Username: "root"
+  MySQL_Password: "deVeloPersecuRity"
+  MySQL_Network:  "tcp"
+  MySQL_IP: "skai_sql"
+  MySQL_Port: 3306
+  MySQL_Datbase:  "skai_sql"
+  Mongo_IP: "skai_mongo"
+  Mongo_port: ":27017"
+  Mongo_Username: "root"
+  Mongo_Password: "disTrIbutedsEcurIty"
+iscontainer: true
+jwt_secret: "mor0106vsc"

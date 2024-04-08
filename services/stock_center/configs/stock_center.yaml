@@ -1,0 +1,10 @@
+MySQL_Info:
+  MySQL_Username: "root"
+  MySQL_Password: "deVeloPersecuRity"
+  MySQL_Network:  "tcp"
+  MySQL_IP: "skai_sql"
+  MySQL_Port: 3306
+  MySQL_Datbase:  "skai_sql"
+iscontainer: false
+Stock_Info_IP: skai_stock_info
+Stock_Info_port: ":8902"

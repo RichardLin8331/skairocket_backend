@@ -38,8 +38,8 @@ type StockInfo struct {
 	UpdateDate string `json:"updatesate"`
 	//LastDayOpen       float64 `json:"lastdayopen"`
 	//LastDayClose      float64 `json:"lastdayclose"`
-	PredictedPrice    float64 `json:"predictedprice"`
-	PredictConfidence float64 `json:"predictionconfidence"`
+	PredictedPrice    string `json:"predicted_price"`
+	PredictConfidence string `json:"prediction_confidence"`
 }
 
 type post_content struct {
@@ -50,6 +50,11 @@ type post_content struct {
 type resp_content struct {
 	Resultprice      float64 `json:"predictedprice"`
 	Resultconfidence float64 `json:"predictionconfidence"`
+}
+
+type reurn_stock_pred struct {
+	Resultprice      string `json:"predicted_price"`
+	Resultconfidence string `json:"prediction_confidence"`
 }
 
 func (sc *StockCenterModule) Init() {
@@ -108,11 +113,13 @@ func (sc *StockCenterModule) SearchStockHandler(c *gin.Context) {
 	if err3 != nil {
 		print("error\n")
 	}
-	si.PredictedPrice = pred_result.Resultprice
-	si.PredictConfidence = pred_result.Resultconfidence
+
+	stock_pred := reurn_stock_pred{Resultprice: fmt.Sprintf("%.0f", pred_result.Resultprice), Resultconfidence: fmt.Sprintf("%.2f", pred_result.Resultconfidence)}
+	si.PredictedPrice = stock_pred.Resultprice
+	si.PredictConfidence = stock_pred.Resultconfidence
 
 	sc.stock_info_DB.Save(si)
-	c.JSON(http.StatusOK, pred_result)
+	c.JSON(http.StatusOK, stock_pred)
 }
 
 func (sc *StockCenterModule) checkStockStatus(stocknum string, today_date string) (*StockInfo, int) {

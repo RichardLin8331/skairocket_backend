@@ -76,14 +76,14 @@ def searchstock():
     to_rev = [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, pr_result1]]
     reved = stock_scaler.inverse_transform(to_rev)
     #print(pr_result1, reved[0][7])
-
+    pred_price = max(0, reved[0][7])
     resp2 = requests.post(url = 'http://' + stockinfo_config['AE_IP'] + ':8501/v1/models/AutoEncoderModel:predict', data = json.dumps(data, cls = NumpyEncoder))
     ae_result2 = resp2.json()['predictions']
     recon_loss = (1.0-((np.array(stock_tomodel[0]) -np.array(ae_result2[0]))**2).mean())*100
     #print(recon_loss)
     if recon_loss < 0:
         recon_loss = 0
-    return Response(json.dumps({'predictedprice': reved[0][7], 'predictionconfidence': recon_loss}), mimetype='application/json')
+    return Response(json.dumps({'predictedprice': pred_price, 'predictionconfidence': recon_loss}), mimetype='application/json')
 
 
 if __name__ == '__main__':

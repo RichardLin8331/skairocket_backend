@@ -1,0 +1,4 @@
+JwtSecret: "mor0106vsc"
+Network: "http://localhost"
+SkAI_user_account: "skai_user_account"
+SkAI_stock_center: "skai_stock_center"

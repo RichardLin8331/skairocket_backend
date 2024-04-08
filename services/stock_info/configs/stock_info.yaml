@@ -1,0 +1,5 @@
+api_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiMjAyMy0wOC0xMCAyMDoyNTowMyIsInVzZXJfaWQiOiJSaWNoYXJkRmF0IiwiaXAiOiIxNDAuMTE2LjEzNy43NSJ9.Lpp1GaB7zAqDfu3ujfvMPXdTKRbqacYrysaWg3RP6TE"
+network_setting:
+  stock_info_port: 19982
+PR_IP: "skai_pr"
+AE_IP: "skai_ae"

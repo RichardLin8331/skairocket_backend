@@ -1,8 +1,2 @@
-services/modules/configs/*
 .env
-services/python/*
-api_gateway/configs/*
-services/stock_info/configs/*
-services/user_account/configs/*
-services/stock_center/configs/*
 api_test/*
