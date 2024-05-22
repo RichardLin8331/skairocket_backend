@@ -1,5 +1,6 @@
 # skAIrocKet - Backend
 ## Project Introduction
+![system architecture](https://github.com/RichardLin8331/skairocket_backend/blob/main/readme_pictures/system_architecture.png?raw=true)
 + The main objective of this project is to develop a tool capable of predicting stocks with potential for rapid growth, and to provide a web UI for user interaction. Users can input the desired stock number into the web UI, and the website will display the predicted next-day stock price along with the confidence score for the prediction.   
 + If users have registered accounts and logged in, they can choose to add their favorite stocks for convenience in daily checking. User information is managed using MySQL and MongoDB databases.
     
@@ -24,6 +25,7 @@
 ### Frontend
 + Vue.js 2.7.16
 + Bootstrap-vue
+![Web UI](https://github.com/RichardLin8331/skairocket_backend/blob/main/readme_pictures/skAIrocKet_WebUI.png?raw=true)
 ### Deployment
 + Microservice Architecture using Docker
 
